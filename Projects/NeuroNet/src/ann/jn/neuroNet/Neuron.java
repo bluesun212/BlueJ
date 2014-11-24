@@ -96,12 +96,25 @@ public class Neuron implements Serializable {
 	}
 
 	/**
-	 * 
-	 * @param inputs
-	 * @return
+	 * Evaluates this Neuron for the given input values.
+	 * @param inputs values of Neuron's inputs.
+	 * @return resultant of Neuron for given input values.
 	 */
 	public float update(float[] inputs) {
-		return 0;
+		//check that number of input values matches number of weights
+		if (inputs.length != weights.length) {
+			throw new IllegalArgumentException("There must be the same number of input values as there are weights +\n" +
+													"\t\tinputs=" + inputs.length + "\n" +
+													"\t\tweights=" + weights.length);
+		}
+		
+		//find summation of inputs multiplied by their respective weights
+		float sum = 0;
+		for (int i = 0; i < inputs.length; i++) {
+			sum += (inputs[i] * weights[i]);
+		}
+		//return evaluation of activation function for summed values
+		return function.evaulate(sum);
 	}
 
 	/**
