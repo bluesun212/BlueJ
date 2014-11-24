@@ -258,6 +258,16 @@ public class NeuralNet {
 			updating = false;
 		}
 	}
+	
+	/**
+	 * A callback that is accessed when NeuralNet is done updating.
+	 */
+	public interface INeuralNetCallback {
+		/**
+		 * Called when NeuralNet is finished updating.
+		 */
+		public abstract void onFinish();
+	}
 
 	private class NeuralNetUpdateThread implements Runnable {
 		private INeuralNetCallback cb;
