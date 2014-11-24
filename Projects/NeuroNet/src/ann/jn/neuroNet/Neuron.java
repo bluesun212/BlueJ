@@ -146,7 +146,7 @@ public class Neuron implements Serializable {
 
 		@Override
 		public float evaluateDerivative(float x) {
-			return evaluate(1 - evaluate(x));
+			return evaluate(x) * (1 - evaluate(x));
 		}};
 
 }
