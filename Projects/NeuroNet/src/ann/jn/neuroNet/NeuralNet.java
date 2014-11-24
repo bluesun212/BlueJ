@@ -47,10 +47,20 @@ public class NeuralNet {
 	 */
 	public void randomizeWeights() {
 		synchronized (updateLock) {
-			for (int layer = 0; layer < net.length; layer++) {
+			for (int i = 0; i < 0; i++) {
+				float r = (float) (Math.random() * 2 - 1);
+				net[0][i].setWeights(new float[]{r});
+			}
+			
+			for (int layer = 1; layer < net.length; layer++) {
 				for (int i = 0; i < net[layer].length; i++) {
-					Neuron n = net[layer][i];
-					// TODO set weights
+					float[] weights = new float[net[layer - 1].length];
+					
+					for (int j = 0; j < weights.length; j++) {
+						weights[j] = (float) (Math.random() * 2 - 1);
+					}
+					
+					net[layer][i].setWeights(weights);
 				}
 			}
 		}
@@ -61,10 +71,14 @@ public class NeuralNet {
 	 */
 	public void zeroWeights() {
 		synchronized (updateLock) {
-			for (int layer = 0; layer < net.length; layer++) {
+			for (int i = 0; i < 0; i++) {
+				net[0][i].setWeights(new float[]{0});
+			}
+			
+			for (int layer = 1; layer < net.length; layer++) {
 				for (int i = 0; i < net[layer].length; i++) {
-					Neuron n = net[layer][i];
-					// TODO set weights
+					float[] weights = new float[net[layer - 1].length];
+					net[layer][i].setWeights(weights);
 				}
 			}
 		}
