@@ -5,6 +5,7 @@ package ann.jn.neuroNet;
  * controls the creation and updates of the network.
  */
 public class NeuralNet {
+	private Neuron.INeuronActivationFunction func;
 	private Neuron[][] net;
 	private Object updateLock;
 	private volatile boolean updating;
@@ -21,10 +22,25 @@ public class NeuralNet {
 	 * will create a NeuralNet with 3 input neurons, 4 hidden neurons,
 	 * and 1 output neuron.
 	 * 
-	 * @param layers
-	 *            the number neurons each layer should have.
+	 * @param layers the number neurons each layer should have.
 	 */
 	public NeuralNet(int... layers) {
+		this(null, layers);
+	}
+	
+	/**
+	 * Creates a NeuralNet with the specified number of neurons in each layer, and
+	 * the specified neuron activation, which defaults to a logistic function.
+	 * The first listed layer is the number of input neurons, and the last layer
+	 * is the number of output neurons.
+	 * 
+	 * for example, <code>NeuralNet(3, 4, 1)<code>
+	 * will create a NeuralNet with 3 input neurons, 4 hidden neurons,
+	 * and 1 output neuron.
+	 * 
+	 * @param layers the number neurons each layer should have.
+	 */
+	public NeuralNet(Neuron.INeuronActivationFunction func, int... layers) {
 		if (layers == null || layers.length < 2) {
 			throw new IllegalArgumentException("Invalid layers!");
 		}
@@ -35,6 +51,7 @@ public class NeuralNet {
 			net[i] = new Neuron[layers[i]];
 		}
 
+		this.func = func;
 		storedInputs = new float[layers[0]];
 		updateLock = new Object();
 		updating = false;
