@@ -348,6 +348,8 @@ public class NeuralNet {
 			if (cb != null) {
 				cb.onFinish();
 			}
+			
+			threads--;
 		}
 
 	}
