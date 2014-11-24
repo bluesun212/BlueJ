@@ -1,5 +1,5 @@
-package ann.jn.teach;
+package ann.jn.teach.gen;
 
 public class GeneticTeacher {
-
+	
 }
