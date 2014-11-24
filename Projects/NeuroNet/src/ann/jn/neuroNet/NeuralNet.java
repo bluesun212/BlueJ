@@ -49,6 +49,16 @@ public class NeuralNet {
 		net = new Neuron[layers.length][];
 		for (int i = 0; i < net.length; i++) {
 			net[i] = new Neuron[layers[i]];
+			
+			for (int j = 0; j < net[i].length; j++) {
+				int ins = i == 0 ? 1 : layers[i - 1];
+				
+				if (func != null) {
+					net[i][j] = new Neuron(ins, func);
+				} else {
+					net[i][j] = new Neuron(ins);
+				}
+			}
 		}
 
 		this.func = func;
