@@ -24,7 +24,9 @@ public class Neuron implements Serializable {
 	 * @author Nicholas Utz
 	 */
 	public interface INeuronActivationFunction {
-		public float evaulate(float x);
+		public float evaluate(float x);
+		
+		public float evaluateDerivative(float x);
 	}
 
 	/**
@@ -114,7 +116,7 @@ public class Neuron implements Serializable {
 			sum += (inputs[i] * weights[i]);
 		}
 		//return evaluation of activation function for summed values
-		return function.evaulate(sum);
+		return function.evaluate(sum);
 	}
 
 	/**
@@ -138,8 +140,13 @@ public class Neuron implements Serializable {
 	 */
 	public static final INeuronActivationFunction DEFAULT_FUNCTION = new INeuronActivationFunction() {
 		@Override
-		public float evaulate(float x) {
+		public float evaluate(float x) {
 			return (float) (1 / (1 + Math.pow(Math.E, -x)));
+		}
+
+		@Override
+		public float evaluateDerivative(float x) {
+			return evaluate(1 - evaluate(x));
 		}};
 
 }
