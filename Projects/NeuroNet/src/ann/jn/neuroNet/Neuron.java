@@ -46,6 +46,11 @@ public class Neuron implements Serializable {
 	private float output = 0;
 	
 	/**
+	 * The sum that resulted from the last call to {@link #update(float[])}.
+	 */
+	private float sum = 0;
+	
+	/**
 	 * <p>
 	 * Creates a new Neuron with <code>inputs</code> input weights.
 	 * </p>
@@ -111,12 +116,13 @@ public class Neuron implements Serializable {
 		}
 		
 		//find summation of inputs multiplied by their respective weights
-		float sum = 0;
+		sum = 0;
 		for (int i = 0; i < inputs.length; i++) {
 			sum += (inputs[i] * weights[i]);
 		}
 		//return evaluation of activation function for summed values
-		return function.evaluate(sum);
+		output = function.evaluate(sum);
+		return output;
 	}
 
 	/**
@@ -128,11 +134,27 @@ public class Neuron implements Serializable {
 	}
 	
 	/**
+	 * Returns the sum produced by the last call to {@link #update(float[])}.
+	 * @return latest output
+	 */
+	public float getSum() {
+		return sum;
+	}
+	
+	/**
 	 * Returns an array containing the values of this Neuron's weights.
-	 * @return
+	 * @return the weight
 	 */
 	public float[] getWeights() {
 		return weights;
+	}
+	
+	/**
+	 * Returns the activation function used to calculate the output from the sum.
+	 * @return the function
+	 */
+	public INeuronActivationFunction getFunction() {
+		return (function);
 	}
 
 	/**
