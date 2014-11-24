@@ -24,8 +24,18 @@ public class Neuron implements Serializable {
 	 * @author Nicholas Utz
 	 */
 	public interface INeuronActivationFunction {
+		/**
+		 * Evaluates the INeuronActivationFunction for the given summation of input values.
+		 * @param x the summation of the inputs multiplied by their weights
+		 * @return the result of evaluating the activation function for the given weighted input
+		 */
 		public float evaluate(float x);
 		
+		/**
+		 * Evaluates the derivative of the INeuronActivationFunction for the given summation of input values.
+		 * @param x the summation of the inputs multiplied by their weights
+		 * @return the result of evaluating the derivative of activation function for the given weighted input
+		 */
 		public float evaluateDerivative(float x);
 	}
 
