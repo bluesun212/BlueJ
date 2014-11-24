@@ -24,7 +24,7 @@ public class WeightMap {
 				weights[x][y] = new float[neurons[x - 1]];
 				for (int z = 0; z < weights[x][y].length; z++) {
 					if (randomize) {
-						weights[x][y][z] = (float) Math.random();
+						weights[x][y][z] = (float) ( 2 * Math.random()) - 1;
 						
 					} else {
 						weights[x][y][z] = 1.0f;
