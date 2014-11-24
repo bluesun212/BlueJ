@@ -230,6 +230,15 @@ public class NeuralNet {
 			return (outs);
 		}
 	}
+	
+	/**
+	 * Returns the number of neural layers in this net.
+	 * 
+	 * @return the number of layers
+	 */
+	public int getNumLayers() {
+		return (net.length);
+	}
 
 	/**
 	 * Gets an array consisting of all the neurons in the specified layer.
