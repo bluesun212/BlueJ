@@ -1,8 +1,8 @@
 package ann.jn.neuroNet;
 
 /**
- * @author J. Squire
- *
+ * The core of the Artificial neural network.  The NeuralNet
+ * controls the creation and updates of the network.
  */
 public class NeuralNet {
 	private Neuron[][] net;
