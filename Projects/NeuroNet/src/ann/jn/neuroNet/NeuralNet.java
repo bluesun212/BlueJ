@@ -197,6 +197,29 @@ public class NeuralNet {
 	public boolean isUpdating() {
 		return updating;
 	}
+	
+	/**
+	 * Gets an input
+	 * 
+	 * @param input the input number
+	 * @return the input value
+	 */
+	public float getInput(int input) {
+		if (input >= net[0].length) {
+			throw new IllegalArgumentException("Neuron number is invalid");
+		}
+		
+		return (storedInputs[input]);
+	}
+	
+	/**
+	 * Gets all of the inputs.
+	 * 
+	 * @return the inputs
+	 */
+	public float[] getInputs() {
+		return (storedInputs);
+	}
 
 	/**
 	 * Gets the last output for the specified neuron.
