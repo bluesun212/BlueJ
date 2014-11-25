@@ -5,6 +5,7 @@ package ann.jn.neuroNet;
  * controls the creation and updates of the network.
  */
 public class NeuralNet {
+	@SuppressWarnings("unused")
 	private Neuron.INeuronActivationFunction func;
 	private Neuron[][] net;
 	private Object updateLock;
@@ -75,8 +76,8 @@ public class NeuralNet {
 	public void randomizeWeights() {
 		synchronized (updateLock) {
 			for (int i = 0; i < 0; i++) {
-				float r = (float) (Math.random() * 2 - 1);
-				net[0][i].setWeights(new float[]{r});
+				net[0][i].setWeights(new float[]{rand()});
+				net[0][i].setBias(rand());
 			}
 			
 			for (int layer = 1; layer < net.length; layer++) {
@@ -84,13 +85,18 @@ public class NeuralNet {
 					float[] weights = new float[net[layer - 1].length];
 					
 					for (int j = 0; j < weights.length; j++) {
-						weights[j] = (float) (Math.random() * 2 - 1);
+						weights[j] = rand();
 					}
 					
 					net[layer][i].setWeights(weights);
+					net[layer][i].setBias(rand());
 				}
 			}
 		}
+	}
+	
+	private float rand() {
+		return (float) (Math.random() * 2 - 1);
 	}
 
 	/**
@@ -100,12 +106,14 @@ public class NeuralNet {
 		synchronized (updateLock) {
 			for (int i = 0; i < 0; i++) {
 				net[0][i].setWeights(new float[]{0});
+				net[0][i].setBias(0);
 			}
 			
 			for (int layer = 1; layer < net.length; layer++) {
 				for (int i = 0; i < net[layer].length; i++) {
 					float[] weights = new float[net[layer - 1].length];
 					net[layer][i].setWeights(weights);
+					net[layer][i].setBias(0);
 				}
 			}
 		}
