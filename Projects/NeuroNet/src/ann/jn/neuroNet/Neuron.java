@@ -111,6 +111,10 @@ public class Neuron implements Serializable {
 			this.weights = weights;
 		}
 	}
+	
+	public  void setWeight(int num, float weight) {
+		weights[num] = weight;
+	}
 
 	/**
 	 * Evaluates this Neuron for the given input values.

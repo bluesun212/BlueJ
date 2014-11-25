@@ -30,7 +30,7 @@ public class BackPropagator {
 		}
 		
 		// Evaulate the cost for the bottom layers
-		for (int layer = layers - 1; layer >= 0; layer--) {
+		for (int layer = layers - 2; layer >= 0; layer--) {
 			for (int i = 0; i < error[layer].length; i++) {
 				int sum = 0;
 				
@@ -52,7 +52,7 @@ public class BackPropagator {
 				
 				for (int w = 0; w < ws.length; w++) {
 					float input = w == 0 ? net.getInput(w) : net.getNeuron(layer - 1, w).getOutput();
-					ws[w] -= learnRate * error[layer][i] * n.getFunction().evaluateDerivative(n.getSum()) * input;
+					ws[w] += learnRate * error[layer][i] * n.getFunction().evaluateDerivative(n.getSum()) * input;
 				}
 				
 				n.setWeights(ws);
