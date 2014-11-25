@@ -49,9 +49,9 @@ public class Neuron implements Serializable {
 	private float output = 0;
 	
 	/**
-	 * The sum that resulted from the last call to {@link #update(float[])}.
+	 * The bias of this neuron.
 	 */
-	private float sum = 0;
+	private float bias = 0;
 	
 	/**
 	 * <p>
@@ -105,8 +105,25 @@ public class Neuron implements Serializable {
 		}
 	}
 	
-	public  void setWeight(int num, float weight) {
+	/**
+	 * Sets the value of one of this Neuron's input weights.
+	 * @param num the weight number
+	 * @param weight the weight value
+	 */
+	public void setWeight(int num, float weight) {
+		if (num >= weights.length) {
+			throw new IllegalArgumentException("Illegal weight number.");
+		}
+		
 		weights[num] = weight;
+	}
+	
+	/**
+	 * Sets this Neuron's bias.
+	 * @param b the bias
+	 */
+	public void setBias(float b) {
+		bias = b;
 	}
 
 	/**
@@ -123,7 +140,7 @@ public class Neuron implements Serializable {
 		}
 		
 		//find summation of inputs multiplied by their respective weights
-		sum = 0;
+		float sum = bias;
 		for (int i = 0; i < inputs.length; i++) {
 			sum += (inputs[i] * weights[i]);
 		}
@@ -141,11 +158,11 @@ public class Neuron implements Serializable {
 	}
 	
 	/**
-	 * Returns the sum produced by the last call to {@link #update(float[])}.
-	 * @return latest output
+	 * Returns the bias
+	 * @return the bias
 	 */
-	public float getSum() {
-		return sum;
+	public float getBias() {
+		return bias;
 	}
 	
 	/**
