@@ -96,7 +96,7 @@ public class NeuralNet {
 	}
 	
 	private float rand() {
-		return (float) (Math.random() * 2 - 1);
+		return (float) (Math.random());
 	}
 
 	/**
