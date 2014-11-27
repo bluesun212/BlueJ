@@ -92,7 +92,9 @@ public class GeneticTeacher {
 	 */
 	/*
 	 * TODO store fitness of previous generation and use to decide whether...
-	 * current generation is worth breeding or if old generation should be used again
+	 * current generation is worth breeding or if old generation should be used again.
+	 * 
+	 * Make buffered generation size same as normal generation size?
 	 */
 	public void doEvolution() {
 		ArrayList<WeightMap> individuals = new ArrayList<WeightMap>(generationSize);
@@ -347,6 +349,14 @@ public class GeneticTeacher {
 	 */
 	public synchronized WeightMap getMap(int index) {
 		return currentGeneration.genomes[index];
+	}
+	
+	/**
+	 * Returns the number of generations that have elapsed.
+	 * @return number of generations
+	 */
+	public int getNumGenerations() {
+		return generationNumber;
 	}
 }
 
