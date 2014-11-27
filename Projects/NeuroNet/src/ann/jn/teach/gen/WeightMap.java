@@ -1,6 +1,10 @@
 package ann.jn.teach.gen;
 
-public class WeightMap {
+import java.io.Serializable;
+
+public class WeightMap implements Serializable {
+	private static final long serialVersionUID = 5765009606999181526L;
+	
 	private float[][][] weights;
 	
 	/**
@@ -80,5 +84,23 @@ public class WeightMap {
 	 */
 	public synchronized int getNumWeightsForNeuron(int layer, int neuron) {
 		return weights[layer][neuron].length;
+	}
+	
+	/**
+	 * Returns all of the weights in the layer <code>layer</cdoe>.
+	 * @param layer the layer to return
+	 * @return the values of all of the weights in the layer
+	 */
+	public synchronized float[][] getLayer(int layer) {
+		return weights[layer];
+	}
+	
+	/**
+	 * Sets all of the weights in the layer <code>layer</code>.
+	 * @param layer the index of the layer to set
+	 * @param data the data to set the layer <code>layer</code> to
+	 */
+	public synchronized void setLayer(int layer, float[][] data) {
+		weights[layer] = data;
 	}
 }
