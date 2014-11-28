@@ -69,8 +69,8 @@ public class Creature extends DrawableNode implements CollisionHandler {
 		// Get the intersection
 		double x = lx;
 		double y = getY() + mySlope * (lx - getX());
-		if (Double.isFinite(slope)) {
-			x = (getY() - ly - mySlope * getX() + slope * lx) / (slope - mySlope);
+		if (!Double.isInfinite(slope)) {	//FIXME AY Yo Jared, this had an error because Double.IsFinite is undefined.
+			x = (getY() - ly - mySlope * getX() + slope * lx) / (slope - mySlope); // I changed it to !Double.isInfinite is that right?
 			y = slope * (x - lx) + ly;
 		}
 		
