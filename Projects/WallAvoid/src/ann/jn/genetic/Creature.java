@@ -3,6 +3,9 @@ package ann.jn.genetic;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
+import ann.jn.genetic.ai.GeneticManager;
+import ann.jn.neuroNet.NeuralNet;
+
 import com.bluesun212.bounding.BoundingBox;
 import com.bluesun212.components.CollisionHandler;
 import com.bluesun212.components.CollisionManager;
@@ -16,6 +19,12 @@ import com.bluesun212.resources.ResourceManager;
 import com.bluesun212.utils.Input;
 
 public class Creature extends DrawableNode implements CollisionHandler {
+	private int netID = -1;
+	
+	private NeuralNet myBraaaaaaaaaaain;
+	
+	private long startTime = 0;
+	
 	public Creature() {
 		ImageTexture tex = (ImageTexture) ResourceManager.getResourceByName("ai");
 		SpriteNode spr = new SpriteNode();
@@ -36,10 +45,24 @@ public class Creature extends DrawableNode implements CollisionHandler {
 		
 		spr.reparentTo(this);
 	}
+	
+	public Creature(int net) {
+		this();
+		this.netID = net;
+		this.myBraaaaaaaaaaain = GeneticManager.getInstance().getNet(netID);
+	}
 
+	@Override
+	public void reparentTo(CompNode p) {
+		super.reparentTo(p);
+		startTime = System.currentTimeMillis();
+	}
+	
 	@Override
 	public void handleCollisions(CompNode[] nodes) {
 		reparentTo(null);
+		long endTime = System.currentTimeMillis();
+		GeneticManager.getInstance().onCreatureDeath(netID, endTime - startTime);
 	}
 	
 	private double distToWall(double dir) {
@@ -69,7 +92,7 @@ public class Creature extends DrawableNode implements CollisionHandler {
 		// Get the intersection
 		double x = lx;
 		double y = getY() + mySlope * (lx - getX());
-		if (!Double.isInfinite(slope)) {	//FIXME AY Yo Jared, this had an error because Double.IsFinite is undefined.
+		if (!Double.isInfinite(slope)) {	//FIXME AY yo Jared, this had an error because Double.IsFinite is undefined.
 			x = (getY() - ly - mySlope * getX() + slope * lx) / (slope - mySlope); // I changed it to !Double.isInfinite is that right?
 			y = slope * (x - lx) + ly;
 		}
@@ -87,9 +110,6 @@ public class Creature extends DrawableNode implements CollisionHandler {
 	
 	@Override
 	public void step() {
-		// Get distances from each side of object
-		// Run through neural net
-		// Set direction to do its own thing
 		// BEGIN test code
 		if (Input.isKeyDown(Keyboard.KEY_LEFT)) {
 			setAngle(getAngle() - 1);
@@ -106,6 +126,56 @@ public class Creature extends DrawableNode implements CollisionHandler {
 							Math.sin(Math.toRadians(getAngle())));
 		}
 		// END test code
+		// BEGIN non test code
+		NeuralNet net = myBraaaaaaaaaaain; //shorten that name a little
+		
+		// Get distances from each side of object
+		// Run through neural net
+		// Set direction to do its own thing
+		synchronized (net) {//lock on net to prevent concurrent modification of inputs (not that thats possible)
+			switch (GeneticManager.NUM_INPUTS) {
+			case 1 : {//dist to forward wall
+				net.setInput(0, (float) distToWall(this.getAngle()));
+				
+			} break;
+			case 2 : {//dist to forward wall and angle
+				net.setInput(0, (float) distToWall(this.getAngle()));
+				net.setInput(1, (float) this.getAngle());
+				
+			} break;
+			case 3 : {//dis to forward, left, and right walls
+				net.setInput(0, (float) distToWall(this.getAngle()));
+				net.setInput(1, (float) distToWall(this.getAngle() + (Math.PI / 2)));
+				net.setInput(2, (float) distToWall(this.getAngle() - (Math.PI / 2)));
+				
+			} break;
+			case 4 : {//dist to forward, left, right, and rear walls
+				net.setInput(0, (float) distToWall(this.getAngle()));
+				net.setInput(1, (float) distToWall(this.getAngle() + (Math.PI / 2)));
+				net.setInput(2, (float) distToWall(this.getAngle() - (Math.PI / 2)));
+				net.setInput(3, (float) distToWall(this.getAngle() + (Math.PI)));
+				
+			} break;
+			case 5 ://dist to north, south, east, west walls, and angle
+				net.setInput(0, (float) (Math.PI / 2));
+				net.setInput(1, (float) (0));
+				net.setInput(2, (float) (Math.PI));
+				net.setInput(3, (float) ((3 * Math.PI) / 2));
+				net.setInput(4, (float) (this.getAngle()));
+			}
+			
+			float[] results = net.update();
+			switch (GeneticManager.NUM_OUTPUTS) {
+			case 1 : {//theta (relative)
+				this.setAngle(this.getAngle() + results[0]);
+			} break;
+			case 2 : {//left, right
+				this.setAngle(this.getAngle() + results[0] - results[1]);
+			} break;
+			}
+		}
+		
+		
 	}
 
 	@Override

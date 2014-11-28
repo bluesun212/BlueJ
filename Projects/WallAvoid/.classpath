@@ -12,5 +12,6 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/WallAvoid/res/incl/javadoc.zip!/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="src" path="/NeuroNet"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

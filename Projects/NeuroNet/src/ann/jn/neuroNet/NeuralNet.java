@@ -300,6 +300,15 @@ public class NeuralNet {
 		return net[layer][num];
 	}
 
+	/**
+	 * Returns the {@link ann.jn.neuroNet.Neuron.INeuronActivationFunction} used to create the
+	 * {@link Neuron}s in this net.
+	 * @return activation function of neurons
+	 */
+	public Neuron.INeuronActivationFunction getActivationFunction() {
+		return func;
+	}
+	
 	// Private methods
 	private void doUpdate() {
 		synchronized (updateLock) {

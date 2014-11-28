@@ -37,4 +37,19 @@ public final class WeightMapUtils {
 		
 		return map;
 	}
+	
+	/**
+	 * Returns a new {@link NeuralNet} with the same number of layers and the same
+	 * layer lengths as the template net given. The values of the Weights in the
+	 * {@link Neurons} in the template net are not copied.
+	 * @param template
+	 * @return
+	 */
+	public static final NeuralNet genMatchingNet(NeuralNet template) {
+		int[] layers = new int[template.getNumLayers()];
+		for (int i = 0; i < template.getNumLayers(); i++) {
+			layers[i] = template.getLayer(i).length;
+		}
+		return new NeuralNet(template.getActivationFunction(), layers);
+	}
 }
