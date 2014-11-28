@@ -21,8 +21,7 @@ public final class WeightMapUtils {
 	
 	public static final WeightMap getWeights(NeuralNet net) {
 		int[] lengths = new int[net.getNumLayers() + 1];
-		lengths[0] = net.getInputs().length;
-		for (int i = 1; i < net.getNumLayers(); i++) {
+		for (int i = 0; i < net.getNumLayers(); i++) {
 			lengths[i] = net.getLayer(i).length;
 		}
 		

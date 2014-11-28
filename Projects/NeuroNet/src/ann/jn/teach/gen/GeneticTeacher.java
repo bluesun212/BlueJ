@@ -1,13 +1,16 @@
 package ann.jn.teach.gen;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.PriorityQueue;
 
 import ann.jn.neuroNet.NeuralNet;
+import ann.jn.neuroNet.Neuron;
 
 /**
  * Uses a genetic algorithm to evolve a {@link NeuralNet}.
  * @author Nicholas Utz
- *
+ * @version 2.0
  */
 public class GeneticTeacher {
 	
@@ -30,13 +33,11 @@ public class GeneticTeacher {
 	
 	private final int generationSize;
 	
-	private final int bufferedGenSize;
+	private final int bufferSize;
 	
-	private ArrayList<Generation> genBuffer;
+	private PriorityQueue<FitWeightMap> genBuffer;
 	
-	private final int maxBufferCount;
-	
-	private Generation currentGeneration;
+	private FitWeightMap[] currentGeneration;
 	
 	private int generationNumber;
 	
@@ -44,16 +45,15 @@ public class GeneticTeacher {
 	
 	/**
 	 * Creates a new GeneticTeacher with <code>genSize</code> individuals per generation,
-	 * <code>bufferSize</code> individuals per buffered generation, and <code>bufferCount</code>
-	 * buffered generations.
+	 * and <code>bufferSize</code> individuals buffered. Buffered individuals are sorted
+	 * by fitness so that only the fittest individuals ever evolved are able to reproduce.
 	 * @param genSize the number of individuals per generation
-	 * @param bufferSize the number of individuals in each buffered generation
-	 * @param bufferCount the number of generations buffered
+	 * @param bufferSize the number of individuals buffered
 	 * @param template the NeuralNet to be evolved
 	 */
-	public GeneticTeacher(int genSize, int bufferSize, int bufferCount, NeuralNet template, IGeneticTeacherCallbacks callbacks) {
-		if (genSize <= 0 || bufferSize < 0 || bufferCount < 0) {
-			throw new IllegalArgumentException("genSize, bufferSize, and bufferCount must be greater than zero");
+	public GeneticTeacher(int genSize, int bufferSize, NeuralNet template, IGeneticTeacherCallbacks callbacks) {
+		if (genSize <= 0 || bufferSize < 0) {
+			throw new IllegalArgumentException("genSize and bufferSize must be greater than zero");
 			
 		} else if (template == null) {
 			throw new NullPointerException("template NeuralNet cannot be null");
@@ -63,9 +63,8 @@ public class GeneticTeacher {
 		}
 		
 		this.generationSize = genSize;
-		this.bufferedGenSize = bufferSize;
-		this.genBuffer = new ArrayList<Generation>(bufferCount);
-		this.maxBufferCount = bufferCount;
+		this.bufferSize = bufferSize;
+		this.genBuffer = new PriorityQueue<FitWeightMap>(bufferSize, new FitWeightMapComparator());
 		this.templateNet = template;
 		this.callbacks = callbacks;
 		genRandomVariation();
@@ -90,60 +89,46 @@ public class GeneticTeacher {
 	 * called on the {@link IGeneticTeacherCallbacks} that was used to create this {@link GeneticTeacher}.
 	 * </p>
 	 */
-	/*
-	 * TODO store fitness of previous generation and use to decide whether...
-	 * current generation is worth breeding or if old generation should be used again.
-	 * 
-	 * Make buffered generation size same as normal generation size?
-	 */
 	public void doEvolution() {
-		ArrayList<WeightMap> individuals = new ArrayList<WeightMap>(generationSize);
+		//sort buffered individuals and current individuals by fitness
+		PriorityQueue<FitWeightMap> allIndividuals = new PriorityQueue<FitWeightMap>(genBuffer.size() + generationSize, new FitWeightMapComparator());
+
+		allIndividuals.addAll(genBuffer);
+		for (int i = 0; i < currentGeneration.length; i++) {
+			allIndividuals.add(currentGeneration[i]);
+		}
 		
+		//empty genBuffer, and refill with bufferSize individuals from allIndividuals
+		ArrayList<FitWeightMap> addBack = new ArrayList<FitWeightMap>(allIndividuals.size() - bufferSize);
 		synchronized (this) {
-			//average fitnesses
-			for (int i = 0; i < generationSize; i++) {
-				currentGeneration.fitnesses[i] = currentGeneration.fitnesses[i] / currentGeneration.fitnessReports[i];
+			genBuffer.clear();
+			for (int i = 0; i < bufferSize; i++) {
+				FitWeightMap indiv = allIndividuals.poll();
+				if (indiv == null) break;
+				genBuffer.add(indiv);
+				addBack.add(indiv);
+			}
+		}
+		//add individuals back
+		allIndividuals.addAll(addBack);
+		
+		//convert to array for random access
+		FitWeightMap[] allIndivs = new FitWeightMap[allIndividuals.size()];
+		allIndivs = allIndividuals.toArray(allIndivs);
+		
+		//perform mutations and breeding to produce next generation
+		synchronized (this) {
+			currentGeneration = new FitWeightMap[generationSize];
+			int index = 0;
+			
+			//first half of new generation is result of breeding most fit individuals
+			for (int i = 0; i < currentGeneration.length / 2; i++, index++) {
+				currentGeneration[index] = breed(allIndivs[i], allIndivs[i + 1]);
 			}
 			
-			//order individuals by fitness
-			for (int i = generationSize; i > 0; i--) {
-				//find individual of greatest fitness
-				int greatestFitnessIndex = 0;
-				for (int j = 0; j < generationSize; j++) {
-					if (currentGeneration.fitnesses[j] > currentGeneration.fitnesses[greatestFitnessIndex] && currentGeneration.fitnessReports[j] != -1) {
-						greatestFitnessIndex = j;
-					}
-				}
-				//add individual of greatest fitness to list
-				individuals.add(currentGeneration.genomes[greatestFitnessIndex]);
-				currentGeneration.fitnessReports[greatestFitnessIndex] = -1;
-			}
-		}
-		
-		//breed and optionally mutate to create next generation
-		Generation nextGen = new Generation(generationSize);
-		int individualsSet = 0;
-		
-		//breed first half of individuals sorted by fitness
-		for (int i = 0; (i < individuals.size() / 2) && (individualsSet < generationSize); i++, individualsSet++) {
-			nextGen.genomes[individualsSet] = breed(individuals.get(i), individuals.get(i + 1));
-		}
-		
-		//mutate second half of individuals sorted by order
-		for (int i = 0; (i < individuals.size() / 2) && (individualsSet < generationSize); i++, individualsSet++) {
-			nextGen.genomes[individualsSet] = mutate(individuals.get(individualsSet));
-		}
-		
-		Generation lastGen = new Generation(bufferedGenSize);
-		for (int i = 0; i < bufferedGenSize; i++) {
-			lastGen.genomes[i] = individuals.get(i);
-		}
-		
-		synchronized (this) {
-			currentGeneration = nextGen;
-			genBuffer.add(lastGen);
-			if (genBuffer.size() > maxBufferCount) {
-				genBuffer.remove(0);
+			//rest of new generation is result of mutating most fit individuals
+			for (int i = 0; index < currentGeneration.length; i++, index++) {
+				currentGeneration[index] = mutate(allIndivs[i]);
 			}
 		}
 		
@@ -171,7 +156,7 @@ public class GeneticTeacher {
 	 * Used during initialization to create random variation to be selected on.
 	 */
 	private void genRandomVariation() {
-		currentGeneration = new Generation(generationSize);
+		currentGeneration = new FitWeightMap[generationSize];
 		for (int i = 0; i < generationSize; i++) {
 			WeightMap map = WeightMapUtils.getWeights(templateNet);
 			for (int x = 0; x < map.getNumLayers(); x++) {
@@ -189,7 +174,7 @@ public class GeneticTeacher {
 	 * Creates a mutation in the given {@link WeightMap}.
 	 * @param map1 the set of 'genes' to mutate
 	 */
-	private WeightMap mutate(WeightMap map) {
+	private FitWeightMap mutate(FitWeightMap map) {
 		int style = (int) (Math.random() * 3);
 		
 		switch (style) {
@@ -257,8 +242,8 @@ public class GeneticTeacher {
 	 * @param map1 the first set of genes to breed
 	 * @param map2 the second set of genes to breed
 	 */
-	private WeightMap breed(WeightMap map1, WeightMap map2) {
-		WeightMap resMap = WeightMapUtils.getWeights(templateNet);
+	private FitWeightMap breed(WeightMap map1, WeightMap map2) {
+		FitWeightMap resMap = FitWeightMap.fromNeuralNet(templateNet);
 		int style = (int) (Math.random() * 3);
 		
 		switch (style) {
@@ -317,14 +302,8 @@ public class GeneticTeacher {
 	 * @param map the WeightMap whose fitness is being reported
 	 */
 	public synchronized void recordFitness(int fitness, WeightMap map) {
-		for (int i = 0; i < currentGeneration.genomes.length; i++) {
-			if (currentGeneration.genomes[i].equals(map)) {
-				if (currentGeneration.fitnessReports[i] == -1) {
-					return;
-				}
-				currentGeneration.fitnesses[i] += fitness;
-				currentGeneration.fitnessReports[i]++;
-			}
+		if (map instanceof FitWeightMap) {
+			((FitWeightMap) map).reportFitness(fitness);
 		}
 	}
 
@@ -333,7 +312,7 @@ public class GeneticTeacher {
 	 * @return number of maps in generation
 	 */
 	public synchronized int getNumMaps() {
-		return currentGeneration.genomes.length;
+		return currentGeneration.length;
 	}
 	
 	/**
@@ -348,7 +327,7 @@ public class GeneticTeacher {
 	 * @return the WeightMap from the current generation with the given index
 	 */
 	public synchronized WeightMap getMap(int index) {
-		return currentGeneration.genomes[index];
+		return currentGeneration[index];
 	}
 	
 	/**
@@ -358,16 +337,49 @@ public class GeneticTeacher {
 	public int getNumGenerations() {
 		return generationNumber;
 	}
-}
 
-class Generation {
-	protected WeightMap[] genomes;
-	protected int[] fitnesses;
-	protected int[] fitnessReports;
+}
+class FitWeightMap extends WeightMap {
+	private static final long serialVersionUID = -3303439354008353761L;
 	
-	public Generation(int size) {
-		this.genomes = new WeightMap[size];
-		this.fitnesses = new int[size];
-		this.fitnessReports = new int[size];
+	private int totalFitness = 0;
+	private int fitnessReportCount = 0;
+	
+	public FitWeightMap(boolean randomize, int[] neurons) {
+		super(randomize, neurons);
+	}
+	
+	public static FitWeightMap fromNeuralNet(NeuralNet net) {
+		int[] layers = new int[net.getNumLayers()];
+		for (int i = 0; i < layers.length; i++) {
+			layers[i] = net.getLayer(i).length;
+		}
+		
+		FitWeightMap res = new FitWeightMap(false, layers);
+		
+		for (int x = 0; x < res.getNumLayers(); x++) {
+			Neuron[] layer = net.getLayer(x);
+			for (int y = 0; y < res.getNumNuronsInLayer(x); y++) {
+				res.setWeightsForNeuron(x, y, layer[y].getWeights());
+			}
+		}
+		
+		return res;
+	}
+	
+	protected void reportFitness(int fit) {
+		totalFitness += fit;
+		fitnessReportCount++;
+	}
+	
+	protected int getTotalFitness() {
+		return totalFitness / fitnessReportCount;
+	}
+
+}
+class FitWeightMapComparator implements Comparator<FitWeightMap> {
+	@Override
+	public int compare(FitWeightMap o1, FitWeightMap o2) {
+		return o1.getTotalFitness() - o2.getTotalFitness();
 	}
 }
