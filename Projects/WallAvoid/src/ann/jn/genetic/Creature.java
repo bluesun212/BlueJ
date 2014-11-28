@@ -110,6 +110,7 @@ public class Creature extends DrawableNode implements CollisionHandler {
 	
 	@Override
 	public void step() {
+		/*
 		// BEGIN test code
 		if (Input.isKeyDown(Keyboard.KEY_LEFT)) {
 			setAngle(getAngle() - 1);
@@ -126,8 +127,17 @@ public class Creature extends DrawableNode implements CollisionHandler {
 							Math.sin(Math.toRadians(getAngle())));
 		}
 		// END test code
+		*/
 		// BEGIN non test code
 		NeuralNet net = myBraaaaaaaaaaain; //shorten that name a little
+		
+		if (netID == -1) {
+			return;
+		}
+		
+		if (Input.isKeyDown(Keyboard.KEY_K)) {//if k pressed, die
+			handleCollisions(null);
+		}
 		
 		// Get distances from each side of object
 		// Run through neural net
