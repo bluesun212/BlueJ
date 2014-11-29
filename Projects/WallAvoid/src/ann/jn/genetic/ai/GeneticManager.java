@@ -31,7 +31,7 @@ public class GeneticManager implements GeneticTeacher.IGeneticTeacherCallbacks {
 		}
 		template = new NeuralNet(layers);
 		template.randomizeWeights();
-		teacher = new GeneticTeacher(GENERATION_SIZE, BUFFER_GEN_SIZE, BUFFER_COUNT, template, this);
+		teacher = new GeneticTeacher(GENERATION_SIZE, BUFFER_SIZE, template, this);
 	}
 	
 	/**
@@ -43,6 +43,7 @@ public class GeneticManager implements GeneticTeacher.IGeneticTeacherCallbacks {
 	}
 
 	public void start() {
+		//don't need to synchronize because nothing else is happening before this
 		teacher.beginEvolution();
 	}
 	
@@ -85,7 +86,7 @@ public class GeneticManager implements GeneticTeacher.IGeneticTeacherCallbacks {
 			}
 		}
 		
-		//repopulate environment
+		//repopulate environment with new generation
 		//safe to perform in this thread because GeneticTeacher.beginEvolution() is used
 		//	making this a separate worker thread.
 		
@@ -126,8 +127,7 @@ public class GeneticManager implements GeneticTeacher.IGeneticTeacherCallbacks {
 	
 	//constants to define geneticTeacher
 	private static final int GENERATION_SIZE = 10;
-	private static final int BUFFER_GEN_SIZE = 7;
-	private static final int BUFFER_COUNT = 4;
+	private static final int BUFFER_SIZE = 10;
 	//constants to define NeuraNet
 	public static final int NUM_INPUTS = 4;		//1 -> dist to forward wall
 												//2 -> dist to forward wall, theta?
