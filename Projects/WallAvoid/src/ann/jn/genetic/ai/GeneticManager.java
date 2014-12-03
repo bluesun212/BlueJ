@@ -129,12 +129,16 @@ public class GeneticManager implements GeneticTeacher.IGeneticTeacherCallbacks {
 	private static final int GENERATION_SIZE = 10;
 	private static final int BUFFER_SIZE = 10;
 	//constants to define NeuraNet
-	public static final int NUM_INPUTS = 4;		//1 -> dist to forward wall
-												//2 -> dist to forward wall, theta?
-												//3 -> dist to forward, left, and right walls
-												//4 -> dist to forward, left, right, rear walls
-												//5 -> dist to north, south, east, west walls, and directionFacing
-	public static final int NUM_OUTPUTS = 2;	//1 -> theta (relative); 2 -> left, right;
+	public static final int NUM_INPUTS = 4;
+	/* 
+	 * 1 -> distance to forward wall
+	 * 2 -> distance to forward wall, theta?
+	 * 3 -> distance to forward, left, and right walls
+	 * 4 -> distance to forward, left, right, rear walls
+	 * 5 -> distance to north, south, east, west walls, and directionFacing
+	 */
+	public static final int NUM_OUTPUTS = 2;
+	//1 -> theta (relative); 2 -> left, right;
 	private static final int[] HIDDEN_LAYERS = new int[]{3, 3}; //more layers with more neurons for more complexity
 	//number of individuals to keep in simulation
 	private static final int NUM_INDIVIDUALS = 20;

@@ -22,7 +22,7 @@ public class WeightMap implements Serializable {
 	public WeightMap(boolean randomize, int... neurons) {
 		this.weights = new float[neurons.length - 1][][];
 		for (int x = 1; x < neurons.length; x++) {
-			weights[x] = new float[neurons[x]][];
+			weights[x - 1] = new float[neurons[x]][];
 			
 			for (int y = 0; y < neurons[x]; y++) {
 				weights[x][y] = new float[neurons[x - 1]];
