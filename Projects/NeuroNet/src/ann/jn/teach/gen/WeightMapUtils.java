@@ -14,7 +14,8 @@ public final class WeightMapUtils {
 			float[][] weights = weightMap.getLayer(x);
 			
 			for (int y = 0; y < layer.length; y++) {
-				layer[y].setWeights(weights[y]);
+				layer[y].setWeights(weights[y++]);
+				layer[y].setBias(weights[y][0]);
 			}
 		}
 	}
@@ -30,6 +31,14 @@ public final class WeightMapUtils {
 		for (int x = 0; x < net.getNumLayers(); x++) {
 			Neuron[] layer = net.getLayer(x);
 			for (int y = 0; y < layer.length; y++) {
+				float[] weights = layer[y].getWeights();
+				float[] nWeights = new float[weights.length + 1];
+				nWeights[0] = layer[y].getBias();
+				
+				for (int i = 0; i < weights.length; i++) {
+					nWeights[i + 1] = weights[i];
+				}
+				
 				map.setWeightsForNeuron(x, y, layer[y].getWeights());
 			}
 		}
