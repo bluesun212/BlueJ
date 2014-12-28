@@ -1,0 +1,55 @@
+GENERAL
+-------
+•Beautify JavaDoc
+•Class JavaDoc footers
+•Restructure variable names, possibly using prefixes
+•Add more logging
+•Abstract rendering + implementations for GL11 and GL20
+
+AUDIO
+-----
+•Sound Listener functionality
+
+BOUNDING (+COLLISION)
+---------------------
+•Create circle bounding box
+•Grid bounding box
+•More methods like ray/line/point intersects
+•"pushout" distance
+•things like gravity and velocity
+
+COMPONENTS
+----------
+•Extra component classes
+	-Entity
+	-Scale node
+	-Scissor node
+	-Culling node
+	-Text node
+	-tiles
+•Add a lot of extra utility methods to nodes
+•Rewrite viewports
+•WindowSetup: render using depthbuffer
+
+GUI
+---
+•Complete rewrite necessary after render update
+
+GRAPHICS
+--------
+•Fonts that render fonts dynamically instead of using images.
+
+RESOURCES
+---------
+•ReadOnlyDirectories/ResourceDirectories
+•Loader files
+•Resource loading management/partitioning
+•Resources keep track of blocks that they're in
+•Block class?
+
+TWEENING
+--------
+•Tweening operations can possibly done in batch with an object
+•Animations
+	-Timelines where events can be triggered
+	-Can be loaded from a file

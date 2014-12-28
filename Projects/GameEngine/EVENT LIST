@@ -1,0 +1,28 @@
+Event name: args
+----------------
+monitorConnected: Monitor added
+monitorDisconnected: Monitor removed
+glfwError: int error, String description
+windowMoved: Window w
+windowResized: Window w
+windowClosing: Window w, ToXicity.CloseAction action
+windowRefresh: Window w
+windowGotFocus: Window w
+windowLostFocus: Window w
+windowIconified: Window w
+windowDeiconified: Window w
+windowFrameBufferResized: Window w
+keyPressed: Window w, int key, ToXicity.KeyModifiers mods
+keyReleased: Window w, int key, ToXicity.KeyModifiers mods
+keyRepeated: Window w, int key, ToXicity.KeyModifiers mods
+keyTyped: Window w, int codepoint
+mousePressed: Window w, int mouse
+mouseReleased: Window w, int mouse
+keyTypedMods: Window w, int codepoint, ToXicity.KeyModifiers mods
+mousePressedMods: Window w, int mouse, ToXicity.KeyModifiers mods
+mouseReleasedMods: Window w, int mouse, ToXicity.KeyModifiers mods
+mouseMoved: Window w
+mouseEntered: Window w
+mouseExited: Window w
+mouseScrolled: Window w, double xOffset, double yOffset
+filesDropped: Window w, String[] files

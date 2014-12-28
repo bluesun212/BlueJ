@@ -1,0 +1,14 @@
+SAFE classes using OpenGL
+-------------------------
+Color
+Window
+WindowHints
+WindowSetupImpl
+
+Context Specific (UNSAFE) classes using OpenGL
+----------------------------------------------
+CollisionNode
+EditableTexture
+Font
+ImageTexture
+Sprite
