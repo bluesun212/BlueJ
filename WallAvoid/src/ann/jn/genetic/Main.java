@@ -1,12 +1,14 @@
 package ann.jn.genetic;
 
-import com.bluesun212.components.Window;
-import com.bluesun212.graphics.ImageTexture;
-import com.bluesun212.resources.ResourceManager;
+import de.jjco.ToXicity;
+import de.jjco.Window;
+import de.jjco.graphics.ImageTexture;
+import de.jjco.resources.ResourceManager;
 
 public class Main {
 	public static void main(String[] args) {
-		Window.create(250, 250);
+		ToXicity.create();
+		Window w = new Window(250, 250);
 		
 		ResourceManager.startResourceBlock("data");
 		new ImageTexture("res/images/player.png").setName("ai");
@@ -15,6 +17,6 @@ public class Main {
 		ResourceManager.loadBlock("data");
 		ResourceManager.blockUntilBlockLoads("data");
 		
-		Window.switchScenes(new TrainScene());
+		w.switchScenes(new TrainScene());
 	}
 }

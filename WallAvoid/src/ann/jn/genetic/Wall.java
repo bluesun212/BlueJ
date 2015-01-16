@@ -1,12 +1,12 @@
 package ann.jn.genetic;
 
-import com.bluesun212.bounding.AxisAlignedBoundingBox;
-import com.bluesun212.components.CollisionNode;
-import com.bluesun212.components.CompNode;
-import com.bluesun212.components.SpriteNode;
-import com.bluesun212.graphics.ImageTexture;
-import com.bluesun212.graphics.Sprite;
-import com.bluesun212.resources.ResourceManager;
+import de.jjco.bounding.AxisAlignedBoundingBox;
+import de.jjco.components.CollisionNode;
+import de.jjco.components.CompNode;
+import de.jjco.components.SpriteNode;
+import de.jjco.graphics.ImageTexture;
+import de.jjco.graphics.Sprite;
+import de.jjco.resources.ResourceManager;
 
 public class Wall extends CompNode {
 	public Wall() {

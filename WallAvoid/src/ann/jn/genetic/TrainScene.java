@@ -1,8 +1,7 @@
 package ann.jn.genetic;
 
+import de.jjco.components.SceneNode;
 import ann.jn.genetic.ai.GeneticManager;
-
-import com.bluesun212.components.SceneNode;
 
 public class TrainScene extends SceneNode {
 	@Override

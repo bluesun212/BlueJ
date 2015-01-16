@@ -1,22 +1,20 @@
 package ann.jn.genetic;
 
-import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
+import de.jjco.Input;
+import de.jjco.bounding.BoundingBox;
+import de.jjco.components.CollisionHandler;
+import de.jjco.components.CollisionManager;
+import de.jjco.components.CollisionNode;
+import de.jjco.components.CompNode;
+import de.jjco.components.DrawableNode;
+import de.jjco.components.SpriteNode;
+import de.jjco.graphics.ImageTexture;
+import de.jjco.graphics.Sprite;
+import de.jjco.resources.ResourceManager;
 import ann.jn.genetic.ai.GeneticManager;
 import ann.jn.neuroNet.NeuralNet;
-
-import com.bluesun212.bounding.BoundingBox;
-import com.bluesun212.components.CollisionHandler;
-import com.bluesun212.components.CollisionManager;
-import com.bluesun212.components.CollisionNode;
-import com.bluesun212.components.CompNode;
-import com.bluesun212.components.DrawableNode;
-import com.bluesun212.components.SpriteNode;
-import com.bluesun212.graphics.ImageTexture;
-import com.bluesun212.graphics.Sprite;
-import com.bluesun212.resources.ResourceManager;
-import com.bluesun212.utils.Input;
 
 public class Creature extends DrawableNode implements CollisionHandler {
 	private int netID = -1;
@@ -135,7 +133,7 @@ public class Creature extends DrawableNode implements CollisionHandler {
 			return;
 		}
 		
-		if (Input.isKeyDown(Keyboard.KEY_K)) {//if k pressed, die
+		if (getWindow().getInput().isKeyDown(Input.KEY_K)) {//if k pressed, die
 			handleCollisions(null);
 		}
 		

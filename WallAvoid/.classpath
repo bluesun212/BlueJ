@@ -2,17 +2,13 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
-	<classpathentry kind="lib" path="res/incl/lwjgl/jar/lwjgl.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="jar:platform:/resource/WallAvoid/res/incl/javadoc.zip!/"/>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="WallAvoid/res/incl/lwjgl/native/unified/x64"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="res/incl/ToXicity 12.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="jar:platform:/resource/WallAvoid/res/incl/javadoc.zip!/"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry kind="src" path="/NeuroNet"/>
+	<classpathentry kind="lib" path="/Engine/lwjgl/jar/lwjgl.jar" sourcepath="/Engine/lwjgl/src.zip">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/GameEngine/lwjgl/doc/javadoc.zip!/"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Engine/lwjgl/native/windows/x64"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Engine/other stuff/toxicity R1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
