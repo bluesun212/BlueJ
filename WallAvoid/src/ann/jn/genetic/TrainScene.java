@@ -6,15 +6,6 @@ import ann.jn.genetic.ai.GeneticManager;
 public class TrainScene extends SceneNode {
 	@Override
 	public void initialize() {
-		//XXX Test code
-		/*
-		// Lazy
-		Creature cc = new Creature();
-		cc.setX(75);
-		cc.setY(75);
-		cc.reparentTo(this);
-		*/
-
 		int[][] spawn = {{1,1,1,1,1},{1,0,0,0,1},{1,0,1,0,1},{1,0,0,0,1},{1,1,1,1,1}};
 		for (int x = 0; x < spawn.length; x++) {
 			for (int y = 0; y < spawn[x].length; y++) {
@@ -44,7 +35,7 @@ public class TrainScene extends SceneNode {
 		c.reparentTo(this);
 	}
 	
-	@Override // BEGIN test code
+	@Override
 	public void step() {
 		//XXX Test code
 		/*
@@ -61,5 +52,5 @@ public class TrainScene extends SceneNode {
 			cc.reparentTo(this);
 		}
 		*/
-	} // END test code
+	}
 }

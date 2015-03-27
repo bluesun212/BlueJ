@@ -2,7 +2,6 @@ package ann.jn.genetic;
 
 import org.lwjgl.opengl.GL11;
 
-import de.jjco.Input;
 import de.jjco.bounding.BoundingBox;
 import de.jjco.components.CollisionHandler;
 import de.jjco.components.CollisionManager;
@@ -17,13 +16,12 @@ import ann.jn.genetic.ai.GeneticManager;
 import ann.jn.neuroNet.NeuralNet;
 
 public class Creature extends DrawableNode implements CollisionHandler {
-	private int netID = -1;
-	
-	private NeuralNet myBraaaaaaaaaaain;
-	
+	private int brain;
 	private long startTime = 0;
 	
-	public Creature() {
+	public Creature(int brain) {
+		this.brain = brain;
+		
 		ImageTexture tex = (ImageTexture) ResourceManager.getResourceByName("ai");
 		SpriteNode spr = new SpriteNode();
 		spr.setSprite(Sprite.loadImage(tex));
@@ -44,12 +42,6 @@ public class Creature extends DrawableNode implements CollisionHandler {
 		spr.reparentTo(this);
 	}
 	
-	public Creature(int net) {
-		this();
-		this.netID = net;
-		this.myBraaaaaaaaaaain = GeneticManager.getInstance().getNet(netID);
-	}
-
 	@Override
 	public void reparentTo(CompNode p) {
 		super.reparentTo(p);
@@ -58,9 +50,9 @@ public class Creature extends DrawableNode implements CollisionHandler {
 	
 	@Override
 	public void handleCollisions(CompNode[] nodes) {
+		long time = System.currentTimeMillis() - startTime;
 		reparentTo(null);
-		long endTime = System.currentTimeMillis();
-		GeneticManager.getInstance().onCreatureDeath(netID, endTime - startTime);
+		GeneticManager.getInstance().onCreatureDeath(brain, time);
 	}
 	
 	private double distToWall(double dir) {
@@ -108,82 +100,51 @@ public class Creature extends DrawableNode implements CollisionHandler {
 	
 	@Override
 	public void step() {
-		/*
-		// BEGIN test code
-		if (Input.isKeyDown(Keyboard.KEY_LEFT)) {
-			setAngle(getAngle() - 1);
-		}
-		if (Input.isKeyDown(Keyboard.KEY_RIGHT)) {
-			setAngle(getAngle() + 1);
-		}
-		if (Input.isKeyDown(Keyboard.KEY_SPACE)) {
-			setAngle(Math.round(getAngle() / 90) * 90);
-		}
+		NeuralNet net = GeneticManager.getInstance().getNet(brain);
 		
-		if (Input.isKeyDown(Keyboard.KEY_UP)) {
-			getPosition().add(Math.cos(Math.toRadians(getAngle())),
-							Math.sin(Math.toRadians(getAngle())));
-		}
-		// END test code
-		*/
-		// BEGIN non test code
-		NeuralNet net = myBraaaaaaaaaaain; //shorten that name a little
-		
-		if (netID == -1) {
-			return;
-		}
-		
-		if (getWindow().getInput().isKeyDown(Input.KEY_K)) {//if k pressed, die
-			handleCollisions(null);
-		}
-		
-		// Get distances from each side of object
-		// Run through neural net
-		// Set direction to do its own thing
-		synchronized (net) {//lock on net to prevent concurrent modification of inputs (not that thats possible)
-			switch (GeneticManager.NUM_INPUTS) {
-			case 1 : {//dist to forward wall
-				net.setInput(0, (float) distToWall(this.getAngle()));
-				
-			} break;
-			case 2 : {//dist to forward wall and angle
-				net.setInput(0, (float) distToWall(this.getAngle()));
-				net.setInput(1, (float) this.getAngle());
-				
-			} break;
-			case 3 : {//dis to forward, left, and right walls
-				net.setInput(0, (float) distToWall(this.getAngle()));
-				net.setInput(1, (float) distToWall(this.getAngle() + (Math.PI / 2)));
-				net.setInput(2, (float) distToWall(this.getAngle() - (Math.PI / 2)));
-				
-			} break;
-			case 4 : {//dist to forward, left, right, and rear walls
-				net.setInput(0, (float) distToWall(this.getAngle()));
-				net.setInput(1, (float) distToWall(this.getAngle() + (Math.PI / 2)));
-				net.setInput(2, (float) distToWall(this.getAngle() - (Math.PI / 2)));
-				net.setInput(3, (float) distToWall(this.getAngle() + (Math.PI)));
-				
-			} break;
-			case 5 ://dist to north, south, east, west walls, and angle
-				net.setInput(0, (float) (Math.PI / 2));
-				net.setInput(1, (float) (0));
-				net.setInput(2, (float) (Math.PI));
-				net.setInput(3, (float) ((3 * Math.PI) / 2));
-				net.setInput(4, (float) (this.getAngle()));
-			}
+		switch (GeneticManager.NUM_INPUTS) {
+		case 1 : {//dist to forward wall
+			net.setInput(0, (float) distToWall(this.getAngle()));
 			
-			float[] results = net.update();
-			switch (GeneticManager.NUM_OUTPUTS) {
-			case 1 : {//theta (relative)
-				this.setAngle(this.getAngle() + results[0]);
-			} break;
-			case 2 : {//left, right
-				this.setAngle(this.getAngle() + results[0] - results[1]);
-			} break;
-			}
+		} break;
+		case 2 : {//dist to forward wall and angle
+			net.setInput(0, (float) distToWall(this.getAngle()));
+			net.setInput(1, (float) this.getAngle());
+			
+		} break;
+		case 3 : {//dis to forward, left, and right walls
+			net.setInput(0, (float) distToWall(this.getAngle()));
+			net.setInput(1, (float) distToWall(this.getAngle() + (Math.PI / 2)));
+			net.setInput(2, (float) distToWall(this.getAngle() - (Math.PI / 2)));
+			
+		} break;
+		case 4 : {//dist to forward, left, right, and rear walls
+			net.setInput(0, (float) distToWall(this.getAngle()));
+			net.setInput(1, (float) distToWall(this.getAngle() + (Math.PI / 2)));
+			net.setInput(2, (float) distToWall(this.getAngle() - (Math.PI / 2)));
+			net.setInput(3, (float) distToWall(this.getAngle() + (Math.PI)));
+			
+		} break;
+		case 5 ://dist to north, south, east, west walls, and angle
+			net.setInput(0, (float) (Math.PI / 2));
+			net.setInput(1, (float) (0));
+			net.setInput(2, (float) (Math.PI));
+			net.setInput(3, (float) ((3 * Math.PI) / 2));
+			net.setInput(4, (float) (this.getAngle()));
 		}
 		
+		float[] results = net.update();
+		switch (GeneticManager.NUM_OUTPUTS) {
+		case 1 : {//theta (relative)
+			this.setAngle(this.getAngle() + results[0] * 10);
+		} break;
+		case 2 : {//left, right
+			this.setAngle(this.getAngle() + (results[0] - results[1]) * 10);
+		} break;
+		}
 		
+		double radAngle = getAngle() / 180 * Math.PI;
+		this.move(Math.cos(radAngle) * 4, Math.sin(radAngle) * 4);
 	}
 
 	@Override
@@ -192,12 +153,12 @@ public class Creature extends DrawableNode implements CollisionHandler {
 		GL11.glBegin(GL11.GL_LINES);
 		GL11.glVertex2d(0, 0);
 		GL11.glVertex2d(distToWall(0), 0);
-		GL11.glVertex2d(0, 0);
+		/*GL11.glVertex2d(0, 0);
 		GL11.glVertex2d(-distToWall(180), 0);
 		GL11.glVertex2d(0, 0);
 		GL11.glVertex2d(0, distToWall(90));
 		GL11.glVertex2d(0, 0);
-		GL11.glVertex2d(0, -distToWall(270));
+		GL11.glVertex2d(0, -distToWall(270));*/
 		GL11.glEnd();
 	}
 }
