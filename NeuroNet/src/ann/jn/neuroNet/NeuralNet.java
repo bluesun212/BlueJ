@@ -5,7 +5,6 @@ package ann.jn.neuroNet;
  * controls the creation and updates of the network.
  */
 public class NeuralNet {
-	@SuppressWarnings("unused")
 	private Neuron.INeuronActivationFunction func;
 	private Neuron[][] net;
 	private Object updateLock;
@@ -71,7 +70,7 @@ public class NeuralNet {
 
 	/**
 	 * Randomizes the weights of each input for each Neuron.
-	 * Each input is between -1 and 1.
+	 * Each input is between 0 and 1.
 	 */
 	public void randomizeWeights() {
 		synchronized (updateLock) {

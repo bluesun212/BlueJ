@@ -13,34 +13,13 @@ import ann.jn.neuroNet.Neuron;
  * @version 2.0
  */
 public class GeneticTeacher {
-	
-	/**
-	 * Defines the interface of a class that wishes to use a {@link GeneticTeacher} to
-	 * teach a {@link NeuralNet}.
-	 * @author Nicholas Utz
-	 */
-	public interface IGeneticTeacherCallbacks {
-		/**
-		 * Called when a cycle of evolution is complete and the next generation
-		 * of {@link WeightMap}s is ready for selection.
-		 */
-		public void onGenerationReady();
-		
-		
-	}
-
 	private final IGeneticTeacherCallbacks callbacks;
-	
 	private final int generationSize;
-	
 	private final int bufferSize;
-	
+	private Object readLock = new Object();
 	private PriorityQueue<FitWeightMap> genBuffer;
-	
-	private FitWeightMap[] currentGeneration;
-	
+	private ArrayList<FitWeightMap> currentGeneration;
 	private int generationNumber;
-	
 	private NeuralNet templateNet;
 	
 	/**
@@ -62,6 +41,7 @@ public class GeneticTeacher {
 			throw new IllegalArgumentException("bufferSize cannot be greater than genSize");
 		}
 		
+		currentGeneration = new ArrayList<FitWeightMap>();
 		this.generationSize = genSize;
 		this.bufferSize = bufferSize;
 		this.genBuffer = new PriorityQueue<FitWeightMap>(bufferSize, new FitWeightMapComparator());
@@ -92,44 +72,63 @@ public class GeneticTeacher {
 	public void doEvolution() {
 		//sort buffered individuals and current individuals by fitness
 		PriorityQueue<FitWeightMap> allIndividuals = new PriorityQueue<FitWeightMap>(genBuffer.size() + generationSize, new FitWeightMapComparator());
-
 		allIndividuals.addAll(genBuffer);
-		for (int i = 0; i < currentGeneration.length; i++) {
-			allIndividuals.add(currentGeneration[i]);
+		for (int i = 0; i < currentGeneration.size(); i++) {
+			allIndividuals.add(currentGeneration.get(i));
 		}
-		
-		//empty genBuffer, and refill with bufferSize individuals from allIndividuals
-		ArrayList<FitWeightMap> addBack = new ArrayList<FitWeightMap>(allIndividuals.size() - bufferSize);
-		synchronized (this) {
+
+		synchronized (readLock) {
 			genBuffer.clear();
-			for (int i = 0; i < bufferSize; i++) {
-				FitWeightMap indiv = allIndividuals.poll();
-				if (indiv == null) break;
-				genBuffer.add(indiv);
-				addBack.add(indiv);
+			while (genBuffer.size() < bufferSize && !allIndividuals.isEmpty()) {
+				genBuffer.add(allIndividuals.remove());
 			}
 		}
-		//add individuals back
-		allIndividuals.addAll(addBack);
+		
+		allIndividuals.clear();
+		allIndividuals.addAll(genBuffer);
 		
 		//convert to array for random access
-		FitWeightMap[] allIndivs = new FitWeightMap[allIndividuals.size()];
-		allIndivs = allIndividuals.toArray(allIndivs);
+		System.out.println("[");
+		FitWeightMap[] allIndivs = new FitWeightMap[genBuffer.size()];
+		for (int i = 0; i < allIndivs.length; i++) {
+			allIndivs[i] = allIndividuals.remove();
+			System.out.print(allIndivs[i].getTotalFitness() + " ");
+		}
+		System.out.println("]");
 		
 		//perform mutations and breeding to produce next generation
 		synchronized (this) {
-			currentGeneration = new FitWeightMap[generationSize];
-			int index = 0;
+			currentGeneration.clear();
+			for (int i = 0; i < allIndivs.length / 10; i++) {
+				currentGeneration.add(allIndivs[i]);
+			}
 			
-			//first half of new generation is result of breeding most fit individuals
+			// Breed a few individuals 
+			int numBred = (int) (Math.random() * 0.5 * allIndivs.length);
+			for (int i = 0; i < numBred; i++) {
+				WeightMap wm1 = allIndivs[(int) (Math.random() * allIndivs.length * 0.25)];
+				WeightMap wm2 = allIndivs[(int) (Math.random() * allIndivs.length * 0.25)];
+				currentGeneration.add(breed(wm1, wm2));
+			}
+			
+			// Mutate a few more
+			int numMutate = (int) (Math.random() * 0.1 * allIndivs.length);
+			for (int i = 0; i < numMutate; i++) {
+				FitWeightMap wm1 = allIndivs[(int) (Math.random() * allIndivs.length)];
+				currentGeneration.add(mutate(wm1));
+			}
+			
+			/*//first half of new generation is result of breeding most fit individuals
 			for (int i = 0; i < currentGeneration.length / 2; i++, index++) {
 				currentGeneration[index] = breed(allIndivs[i], allIndivs[i + 1]);
 			}
 			
+			
+			
 			//rest of new generation is result of mutating most fit individuals
 			for (int i = 0; index < currentGeneration.length; i++, index++) {
 				currentGeneration[index] = mutate(allIndivs[i]);
-			}
+			}*/
 		}
 		
 		generationNumber++;
@@ -156,17 +155,22 @@ public class GeneticTeacher {
 	 * Used during initialization to create random variation to be selected on.
 	 */
 	private void genRandomVariation() {
-		currentGeneration = new FitWeightMap[generationSize];
+		currentGeneration.clear();
+		
 		for (int i = 0; i < generationSize; i++) {
-			WeightMap map = WeightMapUtils.getWeights(templateNet);
+			FitWeightMap map = FitWeightMap.fromNeuralNet(templateNet);
+			
 			for (int x = 0; x < map.getNumLayers(); x++) {
-				for (int y = 0; i < map.getNumNuronsInLayer(x); y++) {
+				for (int y = 0; y < map.getNumNeuronsInLayer(x); y++) {
 					float[] weights = map.getWeightsForNeuron(x, y);
+					
 					for (int z = 0; z < weights.length; z++) {
 						weights[z] *= (float) ((Math.random() * 4) - 2); //multiply weight by between -200% and 200%
 					}
 				}
 			}
+			
+			currentGeneration.add(map);
 		}
 	}
 	
@@ -175,15 +179,24 @@ public class GeneticTeacher {
 	 * @param map1 the set of 'genes' to mutate
 	 */
 	private FitWeightMap mutate(FitWeightMap map) {
-		int style = (int) (Math.random() * 3);
+		NeuralNet temp = WeightMapUtils.genMatchingNet(templateNet);
+		WeightMapUtils.setWeights(temp, map);
+		map = FitWeightMap.fromNeuralNet(temp);
+
+		int style = (int) (Math.random() * 4);
+		
+		int numNeurons = 0;
+		for (int i = 0; i < map.getNumLayers(); i++) {
+			numNeurons += map.getNumNeuronsInLayer(i);
+		}
 		
 		switch (style) {
 		case 0 : {//random mutation
 			//single weight mutations, lets do a lot of them
-			int numMutations = (int) (0.85 * map.getNumLayers() * map.getNumNuronsInLayer(1) * Math.random());
+			int numMutations = (int) (0.85 * numNeurons * Math.random());
 			for (int i = 0; i < numMutations; i++) {
 				int x = (int) (Math.random() * map.getNumLayers());
-				int y = (int) (Math.random() * map.getNumNuronsInLayer(x));
+				int y = (int) (Math.random() * map.getNumNeuronsInLayer(x));
 				int z = (int) (Math.random() * map.getNumWeightsForNeuron(x, y));
 				
 				float[] layer = map.getWeightsForNeuron(x, y);
@@ -192,38 +205,29 @@ public class GeneticTeacher {
 			}
 			
 		} break;
-		case 1 : {//swap layers
-			//moving complete layers
-			int numMutations = (int) (0.25 * map.getNumLayers() * map.getNumNuronsInLayer(1) * Math.random());
-			for (int i = 0; i < numMutations; i++) {
-				int layerSrc = (int) (Math.random() * map.getNumLayers());
-				int layerDst = (int) (Math.random() * map.getNumLayers());
-				float[][] trxBuffer = map.getLayer(layerDst);
-				map.setLayer(layerDst, map.getLayer(layerSrc));
-				map.setLayer(layerSrc, trxBuffer);
-			}
-			
-		} break;
-		case 2 : {//swap neurons in layer
-			int numMutations = (int) (0.5 * map.getNumLayers() * map.getNumNuronsInLayer(1) * Math.random());
+		case 1 : {//swap neurons in layer
+			int numMutations = (int) (0.5 * numNeurons * Math.random());
 			int targetLayer = (int) (Math.random() * map.getNumLayers());
 			for (int i = 0; i < numMutations; i++) {
-				int neuronSrc = (int) (Math.random() * map.getNumNuronsInLayer(targetLayer));
-				int neuronDst = (int) (Math.random() * map.getNumNuronsInLayer(targetLayer));
+				int neuronSrc = (int) (Math.random() * map.getNumNeuronsInLayer(targetLayer));
+				int neuronDst = (int) (Math.random() * map.getNumNeuronsInLayer(targetLayer));
 				float[] trxBuffer = map.getWeightsForNeuron(targetLayer, neuronDst);
 				map.setWeightsForNeuron(targetLayer, neuronDst, map.getWeightsForNeuron(targetLayer, neuronSrc));
 				map.setWeightsForNeuron(targetLayer, neuronSrc, trxBuffer);
 			}
 			
 		} break;
-		case 3 : {//swap neurons throughout
-			int numMutations = (int) (0.75 * map.getNumLayers() * map.getNumNuronsInLayer(1) * Math.random());
+		}
+		
+		/* These will inherently not work
+		 case 2 : {//swap neurons throughout
+			int numMutations = (int) (0.75 * map.getNumLayers() * map.getNumNeuronsInLayer(1) * Math.random());
 			for (int i = 0; i < numMutations; i++) {
 				int neuronSrcX = (int) (Math.random() * map.getNumLayers());
-				int neuronSrcY = (int) (Math.random() * map.getNumNuronsInLayer(neuronSrcX));
+				int neuronSrcY = (int) (Math.random() * map.getNumNeuronsInLayer(neuronSrcX));
 				
 				int neuronDstX = (int) (Math.random() * map.getNumLayers());
-				int neuronDstY = (int) (Math.random() * map.getNumNuronsInLayer(neuronDstX));
+				int neuronDstY = (int) (Math.random() * map.getNumNeuronsInLayer(neuronDstX));
 				
 				float[] trxBuffer = map.getWeightsForNeuron(neuronDstX, neuronDstY);
 				map.setWeightsForNeuron(neuronDstX, neuronDstY, map.getWeightsForNeuron(neuronSrcX, neuronSrcY));
@@ -231,7 +235,19 @@ public class GeneticTeacher {
 			}
 			
 		} break;
-		}
+		
+		 case 1 : {//swap layers XXX this will not work no matter what.  bad idea
+			//moving complete layers
+			int numMutations = (int) (0.25 * numNeurons * Math.random());
+			for (int i = 0; i < numMutations; i++) {
+				int layerSrc = (int) (Math.random() * map.getNumLayers());
+				int layerDst = (int) (Math.random() * map.getNumLayers());
+				map.setLayer(layerDst, map.getLayer(layerSrc));
+				map.setLayer(layerSrc, trxBuffer);
+			}
+			
+		} break;
+		 */
 		
 		return map;
 	}
@@ -247,25 +263,18 @@ public class GeneticTeacher {
 		int style = (int) (Math.random() * 3);
 		
 		switch (style) {
-		case 0 : {//every other layer
+		case 0 : { // every other layer
 			for (int l = 0; l < resMap.getNumLayers(); l++) {
-				if (Math.random() < 0.5) {
-					resMap.setLayer(l, map1.getLayer(l));
-					
-				} else {
-					resMap.setLayer(l, map2.getLayer(l));
-				}
+				WeightMap map = Math.random() < 0.5 ? map1 : map2;
+				resMap.setLayer(l, map.getLayer(l));
 			}
-			
 		} break;
-		case 1 : {//half every layer
+		case 1 : { // half every layer
 			for (int x = 0; x < resMap.getNumLayers(); x++) {
-				for (int y = 0; y < Math.floor(resMap.getNumNuronsInLayer(x) / 2); y++) {
-					resMap.setWeightsForNeuron(x, y, map1.getWeightsForNeuron(x, y));
-				}
-				
-				for (int y = (int) Math.ceil(resMap.getNumNuronsInLayer(x) / 2); y < resMap.getNumNuronsInLayer(x); y++) {
-					resMap.setWeightsForNeuron(x, y, map2.getWeightsForNeuron(x, y));
+				double size = resMap.getNumNeuronsInLayer(x);
+				for (int y = 0; y < resMap.getNumNeuronsInLayer(x); y++) {
+					WeightMap map = (y / size >= 0.5) ? map1 : map2;
+					resMap.setWeightsForNeuron(x, y, map.getWeightsForNeuron(x, y));
 				}
 			}
 			
@@ -273,16 +282,12 @@ public class GeneticTeacher {
 		case 3 : {//every other neuron
 			boolean m1 = true;
 			for (int x = 0; x < resMap.getNumLayers(); x++) {
-				for (int y = 0; y < resMap.getNumNuronsInLayer(x); y++) {
-					if (m1) {
-						resMap.setWeightsForNeuron(x, y, map1.getWeightsForNeuron(x, y));
-						
-					} else {
-						resMap.setWeightsForNeuron(x, y, map1.getWeightsForNeuron(x, y));
-					}
+				for (int y = 0; y < resMap.getNumNeuronsInLayer(x); y++) {
+					WeightMap map = (m1 = !m1) ? map1 : map2;
+					resMap.setWeightsForNeuron(x, y, map.getWeightsForNeuron(x, y));
 				}
 			}
-		}
+		} break;
 		}
 		
 		return resMap;
@@ -312,7 +317,7 @@ public class GeneticTeacher {
 	 * @return number of maps in generation
 	 */
 	public synchronized int getNumMaps() {
-		return currentGeneration.length;
+		return currentGeneration.size();
 	}
 	
 	/**
@@ -327,7 +332,7 @@ public class GeneticTeacher {
 	 * @return the WeightMap from the current generation with the given index
 	 */
 	public synchronized WeightMap getMap(int index) {
-		return currentGeneration[index];
+		return currentGeneration.get(index);
 	}
 	
 	/**
@@ -337,49 +342,69 @@ public class GeneticTeacher {
 	public int getNumGenerations() {
 		return generationNumber;
 	}
-
+	
+	/**
+	 * Defines the interface of a class that wishes to use a {@link GeneticTeacher} to
+	 * teach a {@link NeuralNet}.
+	 * @author Nicholas Utz
+	 */
+	public interface IGeneticTeacherCallbacks {
+		/**
+		 * Called when a cycle of evolution is complete and the next generation
+		 * of {@link WeightMap}s is ready for selection.
+		 */
+		public void onGenerationReady();
+		
+		
+	}
 }
+
 class FitWeightMap extends WeightMap {
 	private static final long serialVersionUID = -3303439354008353761L;
 	
 	private int totalFitness = 0;
-	private int fitnessReportCount = 0;
 	
 	public FitWeightMap(boolean randomize, int[] neurons) {
 		super(randomize, neurons);
 	}
 	
 	public static FitWeightMap fromNeuralNet(NeuralNet net) {
-		int[] layers = new int[net.getNumLayers()];
-		for (int i = 0; i < layers.length; i++) {
-			layers[i] = net.getLayer(i).length;
+		int[] lengths = new int[net.getNumLayers()];
+		for (int i = 0; i < net.getNumLayers(); i++) {
+			lengths[i] = net.getLayer(i).length;
 		}
 		
-		FitWeightMap res = new FitWeightMap(false, layers);
+		FitWeightMap map = new FitWeightMap(false, lengths);
 		
-		for (int x = 0; x < res.getNumLayers(); x++) {
+		for (int x = 0; x < net.getNumLayers(); x++) {
 			Neuron[] layer = net.getLayer(x);
-			for (int y = 0; y < res.getNumNuronsInLayer(x); y++) {
-				res.setWeightsForNeuron(x, y, layer[y].getWeights());
+			
+			for (int y = 0; y < layer.length; y++) {
+				float[] weights = layer[y].getWeights();
+				float[] nWeights = new float[weights.length + 1];
+				
+				nWeights[0] = layer[y].getBias();
+				System.arraycopy(weights, 0, nWeights, 1, weights.length);
+				map.setWeightsForNeuron(x, y, nWeights);
 			}
 		}
 		
-		return res;
+		return map;
 	}
 	
 	protected void reportFitness(int fit) {
-		totalFitness += fit;
-		fitnessReportCount++;
+		totalFitness = fit;
 	}
 	
 	protected int getTotalFitness() {
-		return totalFitness / fitnessReportCount;
+		return totalFitness;
 	}
 
 }
+
 class FitWeightMapComparator implements Comparator<FitWeightMap> {
 	@Override
 	public int compare(FitWeightMap o1, FitWeightMap o2) {
-		return o1.getTotalFitness() - o2.getTotalFitness();
+		return o2.getTotalFitness() - o1.getTotalFitness();
 	}
 }

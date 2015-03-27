@@ -20,22 +20,21 @@ public class WeightMap implements Serializable {
 	 * @param neurons the numbers of Neurons per layer of the NeuralNet
 	 */
 	public WeightMap(boolean randomize, int... neurons) {
-		this.weights = new float[neurons.length - 1][][];
-		for (int x = 1; x < neurons.length; x++) {
-			weights[x - 1] = new float[neurons[x]][];
+		this.weights = new float[neurons.length][][];
+		for (int x = 0; x < neurons.length; x++) {
+			weights[x] = new float[neurons[x]][];
 			
 			for (int y = 0; y < neurons[x]; y++) {
-				weights[x][y] = new float[neurons[x - 1]++];//extra float to store bias
+				weights[x][y] = new float[(x == 0 ? 1 : neurons[x - 1]) + 1]; // extra float to store bias
 				for (int z = 0; z < weights[x][y].length; z++) {
-					if (randomize) {
-						weights[x][y][z] = (float) ( 2 * Math.random()) - 1;
-						
-					} else {
-						weights[x][y][z] = 1.0f;
-					}
+					weights[x][y][z] = randomize ? (float)Math.random() : 1f;
 				}
 			}
 		}
+	}
+	
+	private WeightMap(float[][][] weights) {
+		this.weights = weights;
 	}
 	
 	/**
@@ -104,7 +103,7 @@ public class WeightMap implements Serializable {
 	 * @param layer layer to check
 	 * @return number of Neurons in layer
 	 */
-	public synchronized int getNumNuronsInLayer(int layer) {
+	public synchronized int getNumNeuronsInLayer(int layer) {
 		return weights[layer].length;
 	}
 	
@@ -140,5 +139,13 @@ public class WeightMap implements Serializable {
 	 */
 	public synchronized void setLayer(int layer, float[][] data) {
 		weights[layer] = data;
+	}
+	
+	/**
+	 * Duplicates this WeightMap.
+	 * @return a copy of this object
+	 */
+	public WeightMap clone() {
+		return new WeightMap(weights);
 	}
 }
